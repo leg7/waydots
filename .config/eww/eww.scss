@@ -1,0 +1,57 @@
+// dracula theme
+$background: 	 #282a36;
+$selection: 	 #44475a;
+$foreground: 	 #f8f8f2;
+$comment: 	     #6272a4;
+$cyan: 	         #8be9fd;
+$green: 	     #50fa7b;
+$orange: 	     #ffb86c;
+$pink: 	         #ff79c6;
+$purple: 	     #bd93f9;
+$red: 	         #ff5555;
+$yellow: 	     #f1fa8c;
+
+* {
+	all:         unset;
+	font-family: monospace;
+	font-size: 14px;
+}
+
+.bar, .calendar {
+	margin: 0px;
+	padding: 6px;
+ 	// background-color: rgba($background, .85);
+ 	background-color: rgba($background, .7);
+}
+
+.widget, .widget-red, .widget-yellow, .calendar, tooltip {
+	color:            $foreground;
+
+	border: 0px none;
+	border-radius:    6px;
+
+	padding: 0px 7px 0px 7px;
+}
+
+.widget-red {
+	background-color: $red;
+}
+
+.widget-yellow {
+	background-color: $yellow;
+	color: $selection;
+}
+
+// In case the song title is too big or your screen is too small
+.workspaces {
+	margin: 0pt 100pt 0pt 100pt;
+}
+
+.calendar {
+	border-style: hidden;
+}
+
+tooltip {
+ 	background-color: $foreground;
+	color:            $selection;
+}

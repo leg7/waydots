@@ -1,0 +1,88 @@
+;--- Date ---
+
+(defpoll date :interval "1m"
+	"date '+ %a %d/%m/%Y'")
+
+(defwidget date []
+	(button :class "widget"
+		  :onclick "eww open calendar"
+		  :onrightclick "eww close calendar"
+		  :tooltip "Click to open calendar"
+	date))
+
+;--- Clock ---
+
+(defpoll time :interval "10s"
+	"date '+ %H:%M'")
+
+(defwidget time []
+	(label :class "widget"
+		 :tooltip "Time"
+		 :text time))
+
+;--- Weather ---
+
+(defpoll weather-data :interval "900s" ; 15 min
+  "weather")
+
+(defwidget weather []
+	(label :class "widget"
+		   :visible {weather-data == "" ? false : true}
+		   :text weather-data))
+
+;--- Music ---
+
+; This variable gets updated by ncmpcpp on song change
+; look at ~/.config/ncmpcpp/config for more info
+(defvar current-song "")
+
+(defwidget music[]
+	(label :class "widget"
+		   :visible {current-song == "" ? false : true}
+		   :text " ${current-song}"))
+
+;--- Calendar ---
+
+(defpoll calendar_day :interval "20h"
+	"date '+%d'")
+
+(defpoll calendar_year :interval "20h"
+	"date '+%Y'")
+
+(defwidget cal []
+	(calendar :class "calendar"
+			      :day calendar_day
+			      :year calendar_year
+            ; :onclick ""
+            :show-week-numbers true))
+
+(defwindow calendar
+	:monitor 0
+	:stacking "fg"
+	:exclusive true
+	:geometry (geometry :x "5px"
+						:y "5px"
+						:anchor "top right"
+						:width "270px"
+						:height "60px")
+	(cal))
+
+; (defvar calendar-toggle false)
+;
+; (defwidget calendar-revealer []
+;   (revealer :transition "slidedown"
+;             :reveal calendar-toggle
+;             :duration 6
+;     (calendar)))
+
+;--- Main ---
+
+(defwidget world []
+	(box :spacing 4
+		:space-evenly false
+		:class "world"
+		:halign "end"
+	(music)
+	(weather)
+	(date)
+	(time)))

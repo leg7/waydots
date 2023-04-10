@@ -1,0 +1,8 @@
+width=30%
+
+key_up=Control_R-k
+key_down=Control_R-j
+key_right=Control_L-l
+key_left=Control_L-h
+
+parse_search=true

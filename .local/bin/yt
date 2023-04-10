@@ -1,0 +1,108 @@
+#!/bin/sh -x
+# Script to browse youtube without a browser !
+# Depends on wofi, wget, mpv and coreutils
+# Depends on python to convert html entities to utf-8
+#
+# exit codes: 1 no results found
+
+# It's important you pick a fast instance
+invidious_instance="https://yewtu.be"
+
+# param $1: The number of pages you want to scrape
+# param $2, $3, ...: Your search query like 'leg7 videos' for example
+# returns the string of the results
+#
+# results structure:
+# 		watch url suffix
+# 		thumbnail url suffix
+# 		duration
+# 		title
+# 		channel name
+# 		upload date (relative)
+# 		views
+# 		...
+#
+# exit codes: 1 bad page number agument in scrape_metadata()
+# 			  2 No results found for you query
+scrape_metadata()
+{
+	if [ "$1" -gt 0 ] 2>/dev/null; then
+		pages="$1"
+		shift
+	else
+		exit 1
+	fi
+
+	if [ "$#" -gt 0 ]; then
+		query="$@"
+	else
+		query="$(echo "" | wofi -L 2 -dp "Search a video title: " 2>/dev/null)"
+	fi
+
+	if [ "$query" ]; then
+		query="$(echo "$query" | tr ' ' '+')"
+	else
+		exit 2
+	fi
+
+	query_url="$invidious_instance/search?&type=video&q=$query&page=[1-"$pages"]"
+
+# There is a glitch in invidious where sometimes the upload date will not show
+# up on topic channels so you need to grep for "Shared" too to make sure the
+# video has an upload date
+	metadata="$(curl -s "$query_url" |
+			grep -A6 -B42 'Shared' |
+			grep -Eo '"/watch\?v=.{11}"|/vi/.{11}/mqdefault\.jpg|>[^<]+|' |
+			sed -E 's/^(>|")|"$//g' |
+			python3 -c 'import html,sys; print(html.unescape(sys.stdin.read()), end="")')"
+
+	echo "$metadata"
+}
+
+results="$(scrape_metadata 3 "$@")"
+
+[ "$?" -eq 2 ] && exit
+if [ -z "$results" ]; then
+	notify-send "No results were found for your query 😞"
+	exit 1
+fi
+
+# Download thumbnails
+mkdir -p "$XDG_CACHE_HOME/yt"
+thumbnail_urls="$(echo "$results" | sed -n '2~7p')"
+i=0
+
+for thumbnail in $thumbnail_urls; do
+	wget -t1 --quiet --output-document "$XDG_CACHE_HOME"/yt/"$i".jpg "$invidious_instance$thumbnail" &
+	i=$((i + 1))
+done
+
+# Wofi Prompt
+wofi_data=""
+wofi_text_data="$(echo "$results" | sed -n '3~7{N; N; N; N; s/\n/ | /g; s/^/text:/g; p}')" # text:duration | title | channel ..
+i=1
+
+wait
+for thumbnail in $(find "$XDG_CACHE_HOME"/yt/ -type f | sort -V); do
+	line="$(echo "$wofi_text_data" | sed -n "${i}p")"
+	wofi_data="$(echo -e "$wofi_data\nimg:$thumbnail:$line")"
+	i=$((i + 1))
+done
+wofi_data="$(echo "$wofi_data" | sed '1d')" # Not very elegant
+
+video_count="$(echo "$wofi_data" | wc -l)"
+
+selected_title="$(echo "$wofi_data" |
+		wofi -dIip "$video_count results" -W60% -H90% -Dimage_size=320x180 |
+		cut -f2 -d '|' |
+		sed -E 's/^ +| +$//g')"
+rm -rf "$XDG_CACHE_HOME/yt"
+
+[ -z "$selected_title" ] && exit
+
+# Play the video
+
+video_url="https://www.youtube.com/$(echo "$results" | grep -F -B3 "$selected_title")"
+
+notify-send "Starting up your video 🎥"
+mpv "$video_url" || notify-send -u critical "We had a problem playing back your video 😕"

@@ -1,0 +1,157 @@
+#!/bin/sh
+# A wrapper for bluetoothctl that works with wofi
+# Made to be called with the eww status bar bluetooth widget but can be called
+# from elsewhere
+# Depends on bluetoothctl, the "antenna" script and notify-send
+
+usage()
+{
+	printf "$(basename "$0") [option] [argument]
+	 -l to get connected devices
+	 -c to connect and pair to a device
+	 -d to disconnect and unpair a device
+	 -m open a menu to choose what to do\n"
+}
+
+bad_option()
+{
+	echo "Bad option $1"
+	usage
+	exit 1
+}
+
+# No parameters
+# Returns a list of connected bluetooth device names
+connected()
+{
+	for mac in $(bluetoothctl devices | cut -c 8-); do
+		bluetoothctl info "$mac"
+	done |
+	grep -B8 'Connected: yes' | grep Name | cut -c '8-'
+}
+
+# param $1: The mac address of the device to connect
+connect()
+{
+	bluetoothctl pair "$1"
+	bluetoothctl trust "$1"
+	bluetoothctl connect "$1"
+}
+
+# param $1: The mac address of the device to disconnect
+disconnect()
+{
+	bluetoothctl untrust "$1"
+	bluetoothctl disconnect "$1"
+}
+
+# param $1: A mac adress
+# returns the device name of the mac adress $1
+name()
+{
+	bluetoothctl devices | grep "$1" | cut -f3 -d ' '
+}
+
+# param $1: A mac adress
+# returns the mac adress of the device name $1
+mac()
+{
+	bluetoothctl devices | grep "$1" | cut -f2 -d ' '
+}
+
+# No parameters
+# Opens a wofi menu to connect and pair a bluetooth device
+connect_menu()
+{
+	bluetoothctl scan on > /dev/null &
+	notify-send " Bluetooth" "Scanning for bluetooth devices"
+	sleep 5
+	selected_device_name="$(bluetoothctl devices | cut -f3- -d ' ' |
+							grep -Ev "(..-){5}..$" |
+							wofi -dp ' Select a device to connect to' |
+							cut -f1 -d ' ')"
+
+	if [ -z "$selected_device_name" ]; then
+		notify-send " Bluetooth" "No devices were connected"
+	else
+		selected_device_mac="$(mac "$selected_device_name")"
+
+		if connect "$selected_device_mac"; then
+			notify-send " Bluetooth" "Connected $(name "$selected_device_mac")"
+		else
+			notify-send " Bluetooth" "Error connecting $(name "$selected_device_mac")"
+		fi
+	fi
+
+	bluetoothctl scan off
+}
+
+
+disconnect_menu()
+{
+	selected_device_name="$(connected | wofi -dp ' Select a device to disconnect')"
+
+	if [ -z "$selected_device_name" ]; then
+		notify-send " Bluetooth" "No devices were disconnected"
+	else
+		selected_device_mac="$(mac "$selected_device_name")"
+
+		if disconnect "$selected_device_mac"; then
+			notify-send " Bluetooth" "Disconnected $(name "$selected_device_mac")"
+		else
+			notify-send " Bluetooth" "Error disconnecting $(name "$selected_device_mac")"
+		fi
+	fi
+}
+
+menu()
+{
+	action="$(printf "Connect\nDisconnect" | wofi -dp ' Bluetooth action')"
+	if [ "$action" = "Connect" ]; then
+		connect_menu
+	elif [ "$action" = "Disconnect" ]; then
+		disconnect_menu
+	fi
+}
+
+if [ "$(antenna -s bluetooth)" = "off" ]; then
+	echo "Bluetooth is off" >&2
+	exit
+fi
+
+list_flag=false
+connect_flag=false
+disconnect_flag=false
+menu_flag=false
+
+while getopts lcdmh option; do
+	case $option in
+		l) list_flag=true;;
+		c) connect_flag=true;;
+		d) disconnect_flag=true;;
+		h) usage;;
+		m) menu_flag=true;;
+		*) bad_option "$option";;
+	esac
+done
+
+if  { $list_flag && { $connect_flag || $disconnect_flag || $menu_flag; }; } ||
+	 { $connect_flag && { $disconnect_flag || $menu_flag || $list_flag; }; } ||
+	 { $disconnect_flag && { $connect_flag || $menu_flag || $list_flag; }; } ||
+	 { $menu_flag && { $connect_flag || $disconnect_flag || $list_flag; }; }
+then
+	bad_option
+fi
+
+if $list_flag; then
+	connected
+fi
+if $connect_flag; then
+	connect_menu
+fi
+if $disconnect_flag; then
+	disconnect_menu
+fi
+if $menu_flag; then
+	menu
+fi

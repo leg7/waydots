@@ -1,0 +1,10 @@
+#!/bin/sh
+# $1 is the new fractional scaling to be applied
+
+name="$(hyprctl -j monitors | jq --raw-output '.[] | select(.focused==true).description' | sed 's/ (.*$//')"
+width="$(hyprctl -j monitors | jq --raw-output '.[] | select(.focused==true).width')"
+height="$(hyprctl -j monitors | jq --raw-output '.[] | select(.focused==true).height')"
+refreshRate="$(hyprctl -j monitors | jq --raw-output '.[] | select(.focused==true).refreshRate')"
+hyprctl keyword monitor desc:"$name","$width"x"$height"@"$refreshRate",auto,"$1"
+sleep 0.5
+eww reload

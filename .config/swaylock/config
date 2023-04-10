@@ -1,0 +1,48 @@
+# indicator
+# no-unlock-indicator
+# daemonize
+grace=0.6
+fade-in=0.6
+indicator-caps-lock
+show-failed-attempts
+
+screenshots
+clock
+timestr=%H:%M %p
+datestr=%a %D
+effect-blur=5x5
+font=monospace
+
+indicator-radius=110
+indicator-thickness=5
+
+inside-color=#2e344098
+#inside-clear-color=#5e81ac
+inside-ver-color=#5e81ac
+#inside-caps-lock-color=
+#inside-wrong-color=
+
+key-hl-color=#5e81ac
+
+
+line-color=#3b4252
+#line-clear-color=
+line-ver-color=#5e81ac
+#line-wrong-color=
+line-uses-inside
+#line-uses-ring
+
+#separator-color=
+
+
+ring-color=#4c566a
+#ring-clear-color=
+#ring-caps-lock-color=
+ring-ver-color=#5e81ac98
+#ring-wrong-color=
+
+separator-color=#4c566a
+text-color=#d8dee9
+#text-wrong-color=
+layout-text-color=#eceff4
+line-wrong-color=#d08770

@@ -1,0 +1,8 @@
+#!/bin/sh
+# $1 is the new fractional scaling to be applied
+
+name="$(hyprctl -j monitors | jq --raw-output '.[] | select(.focused==true).description' | sed 's/ (.*$//')"
+hyprctl keyword monitor desc:"$name",disable
+sleep 0.5
+eww reload
+hyprctl dispatch cyclenext

@@ -1,0 +1,17 @@
+;; Workspaces for Hyprland
+
+(deflisten workspace-data :initial "[]"
+	"~/.local/bin/eww/workspace-data")
+(deflisten focused-id :initial "[]"
+	"~/.local/bin/eww/focused-id")
+
+(defwidget workspaces []
+  (box :class "workspaces"
+	   :spacing 4
+       :halign "center"
+	   :space-evenly false
+  (revealer :reveal false :transition 'none' focused-id) ; a hack to fix #669
+    (for workspace in workspace-data
+      (button :class {focused-id == workspace.id ? "widget-red" : "widget"}
+              :onclick "hyprctl dispatch workspace ${workspace.id}"
+			  {workspace.hasfullscreen == true ? "󰄶 ${workspace.id}" : workspace.id}))))

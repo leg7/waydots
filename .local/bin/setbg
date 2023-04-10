@@ -1,0 +1,68 @@
+#!/bin/sh
+# Script to set your background for hyprland with hyprpaper
+# Assumes you have XDG vars set.
+#
+# Abreviations:
+# wp = wallpaper
+# dir = directory
+#
+# Error codes:
+# 1 - Can't delete wp because it's not set
+# 2 - selected wp is not valid
+
+wpdir="$(xdg-user-dir PICTURES)"/wp
+current="$HOME"/.config/wp
+
+if ! test -f "$current"; then
+	touch "$current"
+fi
+
+# prompts for the deletion of the current wp
+delete_current()
+{
+	current_path="$(cat "$current")"
+	rm "$current_path"
+	echo Wallpaper "$current_path" deleted
+	echo "" > "$current"
+}
+
+# returns a random wp from $wpdir
+random_wp()
+{
+	find "$wpdir" | shuf -n1
+}
+
+
+set_wp()
+{
+	oldPid="$(pidof swaybg)"
+	setsid -f swaybg -m fill -i "$1" &>/dev/null &
+	echo "$1" > "$current"
+	kill "$oldPid"
+}
+
+while getopts drp:i option; do
+	case "$option" in
+		(d)
+			delete_current;;
+		(r)
+			set_wp "$(random_wp)";;
+		(p)
+			if [ -f "$OPTARG" ]; then
+				set_wp "$OPTARG"
+			else
+				echo "Error \""$OPTARG"\" is not a valid file path or image"
+				exit 2
+			fi;;
+		(i)
+			set_wp "$(cat "$current")";;
+		(*)
+			printf "usage: setbg [option] [arg]
+
+			Options:
+				d to delete current wp
+				r to select a random wp in $wpdir
+				p to give the path to the desired wallpaper
+				i to init hyprpaper\n"
+	esac
+done

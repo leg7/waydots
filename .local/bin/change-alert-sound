@@ -1,0 +1,16 @@
+#!/bin/sh
+# Change your default alert sound symlink ~/.local/share/alerts/default to the
+# file "$1" passed as argument to the script.
+# If no arguments are passed a random alert sound is picked in $dir
+
+dir="$HOME"/.local/share/alerts
+mkdir -p "$dir"
+cd "$dir" || exit
+
+if [ -z "$1" ]; then
+	set -- "$dir"
+fi
+
+new="$(find "$1" -type f | shuf -n1)"
+ln -sf "$new" default
+notify-send "🔔 Test" "Testing the new alert sound $(basename $new)"

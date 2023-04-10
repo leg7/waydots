@@ -1,0 +1,41 @@
+#!/bin/sh
+# Wrapper for pactl to update the volume widget of the eww status bar
+# Script is minimal because it needs to be hella fast, so no argument chekcing
+# -c to change volume to "$2"
+# -g to get the current "$volume_label"
+# -m to mute
+
+set_volume_label()
+{
+	volume_label="$(pactl get-sink-volume @DEFAULT_SINK@ | awk 'NR==1{print $5}' | tr -d '%')"
+
+	if [ "$(pactl get-sink-mute @DEFAULT_SINK@)" = "Mute: yes" ]; then
+		volume_label="󰝟 $volume_label%"
+	elif [ "$volume_label" -eq 0 ]; then
+		volume_label=" $volume_label%"
+	elif [ "$volume_label" -lt 50 ]; then
+		volume_label=" $volume_label%"
+	else
+		volume_label=" $volume_label%"
+	fi
+}
+
+update_eww()
+{
+	set_volume_label
+	eww update volume-level="$volume_label"
+}
+
+case "$1" in
+	-c)
+		pactl set-sink-volume @DEFAULT_SINK@ "$2"
+		update_eww ;;
+	-g)
+		set_volume_label
+		echo "$volume_label" ;;
+	-m)
+		pactl set-sink-mute @DEFAULT_SINK@ toggle
+		update_eww ;;
+	*)
+		echo "Option error $1" >&2;;
+esac

@@ -1,0 +1,5 @@
+#!/bin/sh
+
+transmission-daemon
+tremc -X
+killall transmission-daemon &

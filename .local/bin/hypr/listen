@@ -1,0 +1,8 @@
+#!/bin/sh
+
+handle ()
+{
+	printf "\n$line"
+}
+
+socat - UNIX-CONNECT:/tmp/hypr/"$HYPRLAND_INSTANCE_SIGNATURE"/.socket2.sock | while read line; do handle; done

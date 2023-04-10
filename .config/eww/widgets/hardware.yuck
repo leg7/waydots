@@ -1,0 +1,104 @@
+;--- Battery ----
+
+(defpoll battery-level :interval "15s"
+  "battery -pc")
+
+(defpoll battery-status :interval "15s"
+  "battery -s")
+
+(defwidget battery []
+  (label :class {battery-status == "Charging" ? "widget-yellow" : "widget"}
+         :visible {battery-status == "" ? false : true}
+         :tooltip battery-status
+         :text battery-level))
+
+;--- Brightness ---
+
+; Kind of a hack to initialize the variable on launch without actually polling
+(defpoll brightness-level :interval "10000s"
+						  :run-while false
+"brightness -g")
+
+(defwidget brightness[]
+  (label :class "widget"
+		 :tooltip "Brightness"
+         :text brightness-level))
+
+;--- Ethernet ---
+; Visible if you're connected to the internet via ethernet
+
+(defpoll connected-ethernet-device :interval "5s"
+								  :run-while true
+"nmcli -t -f TYPE,DEVICE connection show --active | grep -F ethernet | cut -f2 -d ':'")
+
+(defwidget ethernet []
+  (button :onclick "foot -T nmtui -e nmtui &"
+    (label :class "widget"
+           :visible {connected-ethernet-device == "" ? false : true}
+           :tooltip connected-ethernet-device
+           :text "")))
+
+;--- Antennas ---
+; "wlan-on" and "bluetooth-on" variables are updated by the "antenna"
+; script. The script should be bound to your key to toggle bluetooth/wifi
+
+; These variables could be set correctly automatically but since yuck variables
+; cannot refer to other variables is how it is
+(defvar wlan-on true) ; Enabled by default because tlp enables wlan on boot
+
+(defpoll essid :interval "5s"
+               :run-while wlan-on
+  "iwgetid -r || echo ''")
+
+(defwidget wlan []
+  (button :onclick "foot -T nmtui -e nmtui &"
+    (label :class {essid == "" ? "widget-red" : "widget"}
+           :visible wlan-on
+           :tooltip essid
+           :text {essid == "" ? "󰤮" : ""})))
+
+;--- Bluetooth ---
+
+(defvar bluetooth-on false) ; tlp disables bluetooth on boot
+
+(defpoll connected-devices :interval "5s"
+                           :run-while bluetooth-on
+  "bt -l")
+
+(defwidget bluetooth []
+  (button :onclick "bt -m &"
+    (label :class {connected-devices == "" ? "widget-red" : "widget"}
+           :visible bluetooth-on
+           :tooltip connected-devices
+           :text {connected-devices == "" ? "" : ""})))
+
+;--- Volume ---
+
+; We poll when bluetooth is on because you can control the volume with some
+; bluetooth devices, like tapping on them for example
+; This would change the volume without the "volume" and not update the widget
+; Otherwise we just update the var manually with the "volume" script when
+; bluetooth is disabled
+(defpoll volume-level :interval "3s"
+					  :run-while bluetooth-on
+"volume -g")
+
+(defwidget volume []
+	(label :class {volume-level == "" ? "widget-red" : "widget"}
+		   :visible {volume-level == "" ? false : true}
+		   :tooltip "Volume"
+		   :text volume-level))
+
+;--- Main ---
+
+(defwidget hardware []
+  (box :spacing 4
+       :space-evenly false
+       :class "hardware"
+       :halign "start"
+    (battery)
+    (brightness)
+	(volume)
+	(ethernet)
+    (wlan)
+    (bluetooth)))

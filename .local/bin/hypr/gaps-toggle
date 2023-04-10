@@ -1,0 +1,18 @@
+#!/bin/sh
+# Toggles hyprland gaps on-off
+
+# $1 is the value for $gaps_in
+# $2 for gaps out
+# $3 is the rounding of the windows
+
+if test $(hyprctl -j getoption general:gaps_in | jq '.["int"]') -eq 0; then
+	hyprctl keyword general:gaps_in $1
+	hyprctl keyword general:gaps_out $2
+	hyprctl keyword decoration:rounding $3
+	hyprctl keyword decoration:multisample_edges true
+else
+	hyprctl keyword general:gaps_in 0
+	hyprctl keyword general:gaps_out 0
+	hyprctl keyword decoration:rounding 0
+	hyprctl keyword decoration:multisample_edges false
+fi

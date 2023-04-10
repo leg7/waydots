@@ -1,0 +1,130 @@
+#!/bin/sh
+# Dash script to calculate bat life left on dual bat laptops like the
+# thinkpad t480
+# Depends on awk, ls, grep, echo and cat and font awesome for the pretty print
+
+bat_path="/sys/class/power_supply"
+
+batteries()
+{
+	ls $bat_path | grep BAT
+}
+
+total_energy_full()
+{
+	total_energy_full=0
+
+	for bat in $(batteries); do
+		bat_scale="$(cat "$bat_path"/"$bat"/charge_control_end_threshold)"
+		energy_full="$(cat "$bat_path"/"$bat"/energy_full)"
+		true_energy_full="$(awk -v ef="$energy_full" -v bs="$bat_scale" 'BEGIN{print ef * (bs/100)}')"
+
+		total_energy_full="$(awk -v tef="$total_energy_full" -v eef="$true_energy_full" 'BEGIN{print tef + eef}')"
+	done
+
+	echo "$total_energy_full"
+}
+
+total_energy_now()
+{
+	total_energy_now=0
+
+	for bat in $(batteries); do
+		energy_now="$(cat "$bat_path"/"$bat"/energy_now)"
+		total_energy_now=$((total_energy_now + energy_now))
+	done
+
+	echo "$total_energy_now"
+}
+
+capacity()
+{
+	awk -v tef="$(total_energy_full)" -v ten="$(total_energy_now)" 'BEGIN{print int((ten / tef) * 100) }'
+}
+
+status()
+{
+	charging=false
+	discharging=false
+
+	for bat in $(batteries); do
+		status="$(cat "$bat_path"/"$bat"/status)"
+		if [ "$status" = "Charging" ]; then
+			charging=true
+		elif [ "$status" = "Discharging" ]; then
+			discharging=true
+		fi
+	done
+
+	if [ "$charging" = "true" ]; then
+		echo "Charging"
+	elif [ "$discharging" = "true" ]; then
+		echo "Discharging"
+	else
+		echo "Not Charging"
+	fi
+}
+
+pretty_capacity()
+{
+	cap="$(capacity)"
+
+	if [ "$(status)" = "Charging" ]; then
+
+		if [ "$cap" -lt 10 ]; then
+			echo "󰢜 $cap%"
+ 		elif [ "$cap" -lt 20 ] && [ "$cap" -gt 10 ]; then
+			echo "󰂆 $cap%"
+ 		elif [ "$cap" -lt 30 ] && [ "$cap" -gt 20 ]; then
+			echo "󰂇 $cap%"
+ 		elif [ "$cap" -lt 40 ] && [ "$cap" -gt 30 ]; then
+			echo "󰂈 $cap%"
+ 		elif [ "$cap" -lt 50 ] && [ "$cap" -gt 40 ]; then
+			echo "󰢝 $cap%"
+ 		elif [ "$cap" -lt 60 ] && [ "$cap" -gt 50 ]; then
+			echo "󰂉 $cap%"
+ 		elif [ "$cap" -lt 70 ] && [ "$cap" -gt 60 ]; then
+			echo "󰢞 $cap%"
+ 		elif [ "$cap" -lt 80 ] && [ "$cap" -gt 70 ]; then
+			echo "󰂊 $cap%"
+ 		elif [ "$cap" -lt 95 ] && [ "$cap" -gt 80 ]; then
+			echo "󰂋 $cap%"
+ 		else
+			echo "󰂅 $cap%"
+		fi
+	else
+		if [ "$cap" -lt 10 ]; then
+			echo "󰂎 $cap%"
+		elif [ "$cap" -le 20 ] && [ "$cap" -gt 10 ]; then
+			echo "󰁺 $cap%"
+		elif [ "$cap" -le 30 ] && [ "$cap" -gt 20 ]; then
+			echo "󰁼 $cap%"
+		elif [ "$cap" -le 40 ] && [ "$cap" -gt 30 ]; then
+			echo "󰁽 $cap%"
+		elif [ "$cap" -le 50 ] && [ "$cap" -gt 40 ]; then
+			echo "󰁾 $cap%"
+		elif [ "$cap" -le 60 ] && [ "$cap" -gt 50 ]; then
+			echo "󰁿 $cap%"
+		elif [ "$cap" -le 70 ] && [ "$cap" -gt 60 ]; then
+			echo "󰂀 $cap%"
+		elif [ "$cap" -le 80 ] && [ "$cap" -gt 70 ]; then
+			echo "󰂁 $cap%"
+		elif [ "$cap" -le 95 ] && [ "$cap" -gt 80 ]; then
+			echo "󰂂 $cap%"
+		else
+			echo "󰁹 $cap%"
+		fi
+	fi
+}
+
+if [ -z "$(batteries)" ]; then
+	exit 1;
+fi
+
+if [ "$1" = "-c" ] || [ "$1" = "--capacity" ]; then
+	capacity
+elif [ "$1" = "-pc" ] || [ "$1" = "--pretty-capacity" ]; then
+	pretty_capacity
+elif [ "$1" = "-s" ] || [ "$1" = "--status" ]; then
+	status
+fi

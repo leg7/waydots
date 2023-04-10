@@ -1,0 +1,25 @@
+#!/bin/sh
+
+# location="yakutsk"           # What city to get weather information about
+location="angers"           # What city to get weather information about
+
+weather()
+{
+	# if it's night time show the moon phase emoji instead
+	hour=$(date +"%H")
+
+	if [ "$hour" -gt 20 ] || [ "$hour" -lt 6 ]; then
+		format="?format=%m+%f"
+	else
+		format="?format=%c%f"
+	fi
+
+	weather="$(curl -s https://wttr.in/"$location$format" | tr -d '+' | tr -s ' ')"
+
+	# If weather couldn't be fetched
+	echo "$weather" | grep -qo "°" || weather=""
+
+	echo "$weather"
+}
+
+weather

@@ -1,0 +1,12 @@
+#!/bin/sh
+
+handle()
+{
+	if echo $line | grep -q "^monitorremoved>>DP-"; then
+		hyprctl reload
+		antenna -t wlan -u wlan
+		pkill -x easyeffects
+	fi
+}
+
+socat - UNIX-CONNECT:/tmp/hypr/"$HYPRLAND_INSTANCE_SIGNATURE"/.socket2.sock | while read line; do handle; done

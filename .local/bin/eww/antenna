@@ -1,0 +1,56 @@
+#!/bin/sh
+# This is a wrapper for rfkill to update the wifi and bluetooth eww widgets
+
+usage()
+{
+	printf "$(basename "$0") [option] [argument]
+
+	Options:
+	 -t Toggles the antenna \$2 on/off
+	 -d Disconnects the antenna \$2
+	 -c Connects the antenna \$2
+	 -u Updates the eww status bar widget for the antenna
+	 -s Get the status of antenna \$2, possible values are 'on','off'
+	 -h Show this help message\n"
+}
+
+bad_option()
+{
+	echo "Bad Option $1"
+	usage
+	exit 1
+}
+
+# Return the status of antenna "$1"
+antenna_status()
+{
+	status="$(rfkill -J -o TYPE,SOFT,HARD | jq '(.rfkilldevices[] | select(.type == "'"$1"'" and (.soft == "unblocked" and .hard == "unblocked"))) | length > 0')"
+
+	if [ "$status" ]; then
+		echo on
+	else
+		echo off
+	fi
+}
+
+# "$1" The antenna to update
+update_eww()
+{
+	if [ "$(antenna_status "$1")" = 'on' ]; then
+		eww update "$1"-on=true
+	else
+		eww update "$1"-on=false
+	fi
+}
+
+while getopts t:d:c:u:s:h option; do
+	case $option in
+		t) rfkill toggle "$OPTARG";;
+		d) rfkill block "$OPTARG";;
+		c) rfkill unblock "$OPTARG";;
+		u) update_eww "$OPTARG";;
+		s) antenna_status "$OPTARG";;
+		h) usage;;
+		*) bad_option "$option";;
+	esac
+done

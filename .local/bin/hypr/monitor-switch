@@ -1,0 +1,12 @@
+#!/bin/sh
+
+handle()
+{
+	if echo $line | grep -q "^focusedmon>>DP-"; then
+		hyprctl keyword animations:enabled 0
+	elif echo $line | grep -q "^focusedmon>>eDP-1"; then
+		hyprctl keyword animations:enabled 1
+	fi
+}
+
+socat - UNIX-CONNECT:/tmp/hypr/"$HYPRLAND_INSTANCE_SIGNATURE"/.socket2.sock | while read line; do handle; done
