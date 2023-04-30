@@ -3,10 +3,13 @@
 handle()
 {
 	if echo $line | grep -q '^monitoradded>>'; then
-		disconnect
-		antenna -t wlan -u wlan
-		eww open bar
+		# disconnect # bugged can't reconnect monitor later
+		zoom 1.2
+		eww reload
+		eww open bar-extern
 		easyeffects --gapplication-service &
+		antenna -u bluetooth
+		antenna -d wlan -u wlan
 	fi
 }
 

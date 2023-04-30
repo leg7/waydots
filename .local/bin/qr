@@ -1,7 +1,0 @@
-#!/bin/sh
-
-qrcode="$XDG_CACHE_HOME/qrcode.png"
-
-qrencode -o "$qrcode" "$(wl-paste)"
-xdg-open "$qrcode"
-rm "$qrcode"

@@ -4,7 +4,9 @@ handle()
 {
 	if echo $line | grep -q "^monitorremoved>>DP-"; then
 		hyprctl reload
-		antenna -t wlan -u wlan
+		eww reload
+		antenna -u bluetooth
+		antenna -c wlan -u wlan
 		pkill -x easyeffects
 	fi
 }
