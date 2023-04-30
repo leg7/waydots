@@ -15,6 +15,7 @@ if status is-login
 	set -x GOMODCACHE            $XDG_CACHE_HOME/go/mod
 	set -x RUSTUP_HOME           $XDG_DATA_HOME/rustup
 	set -x CARGO_HOME            $XDG_DATA_HOME/cargo
+	set -x STACK_ROOT            $XDG_DATA_HOME/stack
 	set -x NPM_CONFIG_USERCONFIG $XDG_CONFIG_HOME/npm/npmrc
 	set -x NUGET_PACKAGES        $XDG_CACHE_HOME/NuGetPackages
 	set -x NODE_REPL_HISTORY     $XDG_DATA_HOME/node_repl_history
@@ -60,6 +61,12 @@ if status is-interactive
 
 	fish_vi_key_bindings
 	for mode in default normal insert visual
-		bind -M $mode \cf "printf '\n'; fcd; commandline -f repaint"
+		bind -M $mode \cf "printf '\n'; file-manager; commandline -f repaint"
+
+		bind -M $mode \cs "printf '\n'; fuzzy-cd; commandline -f repaint"
+		bind -M $mode \ch "printf '\n'; fuzzy-history; commandline -f repaint"
+		bind -M $mode \co "printf '\n'; fuzzy-open; commandline -f repaint"
+		bind -M $mode \cp "printf '\n'; fuzzy-path; commandline -f repaint"
+		bind -M $mode \ce "accept-autosuggestion"
 	end
 end
