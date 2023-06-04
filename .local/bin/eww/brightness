@@ -3,14 +3,9 @@
 # -c Sets brightness passed as parameter $1 if it exists
 # -g get the current brightness
 
-brightness_level()
-{
-	brightnessctl | grep -Eo '[0-9]{1,3}%' | tr -d '%'
-}
-
 pretty_level()
 {
-	level="$(brightness_level)"
+	level="$(brightnessctl -m | cut -d ',' -f4 | tr -d %)"
 
 	if [ "$level" -lt 10 ]; then
 		echo "󱩎 $level%"
@@ -43,9 +38,9 @@ update_eww()
 case "$1" in
 	-c)
 		[ "$2" ] && brightnessctl set "$2"
-		update_eww ;;
+		update_eww;;
 	-g)
-		pretty_level ;;
+		pretty_level;;
 	*)
 		echo "Option error $1" >&2
 		exit 1 ;;

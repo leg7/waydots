@@ -1,0 +1,4 @@
+#!/bin/sh
+qrencode "$@" -o $XDG_CACHE_HOME/qr.png -s 40 "$(wl-paste)"
+xdg-open $XDG_CACHE_HOME/qr.png
+rm $XDG_CACHE_HOME/qr.png

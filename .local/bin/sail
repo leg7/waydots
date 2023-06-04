@@ -1,5 +1,6 @@
 #!/bin/sh
 
-transmission-daemon
-tremc -X
-killall transmission-daemon &
+if ! pidof -q transmission-daemon; then
+	transmission-daemon -er
+fi
+tremc && pkill transmission

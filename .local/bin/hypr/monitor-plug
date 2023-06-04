@@ -4,7 +4,8 @@ handle()
 {
 	if echo $line | grep -q '^monitoradded>>'; then
 		# disconnect # bugged can't reconnect monitor later
-		zoom 1.2
+		# zoom 1.2
+		sleep 1
 		eww reload
 		eww open bar-extern
 		easyeffects --gapplication-service &

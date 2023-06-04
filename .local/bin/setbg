@@ -10,7 +10,8 @@
 # 1 - Can't delete wp because it's not set
 # 2 - selected wp is not valid
 
-wpdir="$(xdg-user-dir PICTURES)"/wp
+# wpdir="$(xdg-user-dir PICTURES)"/wp
+wpdir="$HOME/wp"
 current="$HOME"/.config/wp
 
 if ! test -f "$current"; then
@@ -63,6 +64,6 @@ while getopts drp:i option; do
 				d to delete current wp
 				r to select a random wp in $wpdir
 				p to give the path to the desired wallpaper
-				i to init hyprpaper\n"
+				i to set the saved wp\n"
 	esac
 done
