@@ -206,6 +206,7 @@
 ;; (use-package lsp-java)
 
 (use-package haskell-mode)
+(use-package nix-mode :mode "\\.nix\\'")
 
 ;; Vim mode
 
