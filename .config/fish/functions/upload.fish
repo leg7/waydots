@@ -5,7 +5,9 @@ function upload
 
 	for i in $argv
 		if test -f $i
-			curl -F "file=@$i" https://0x0.st
+			set url (curl -sF "file=@$i" https://0x0.st)
+			wl-copy $url
+			printf "\n$i: $url copied to the clipboard\n"
 		end
 	end
 end
