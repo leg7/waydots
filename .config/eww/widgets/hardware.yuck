@@ -27,16 +27,16 @@
 ;--- Ethernet ---
 ; Visible if you're connected to the internet via ethernet
 
-(defpoll connected-ethernet-device :interval "5s"
+(defpoll connected-ethernet-device :interval "10s"
 								  :run-while true
-"nmcli -t -f TYPE,DEVICE connection show --active | grep -F ethernet | cut -f2 -d ':'")
+"ip route | awk '/^default/{print $5}' | grep '^e'")
 
 (defwidget ethernet []
   (button :onclick "foot -T nmtui -e nmtui &"
     (label :class "widget"
            :visible {connected-ethernet-device == "" ? false : true}
            :tooltip connected-ethernet-device
-           :text "")))
+           :text "󰈀 ")))
 
 ;--- Antennas ---
 ; "wlan-on" and "bluetooth-on" variables are updated by the "antenna"
@@ -48,14 +48,13 @@
 
 (defpoll essid :interval "5s"
                :run-while wlan-on
-  "iwgetid -r || echo ''")
+  "iwctl station wlan0 show | grep 'Connected network' | sed 's/.*Connected network     //; s/ *$//'")
 
 (defwidget wlan []
-  (button :onclick "foot -T nmtui -e nmtui &"
     (label :class {essid == "" ? "widget-red" : "widget"}
            :visible wlan-on
            :tooltip essid
-           :text {essid == "" ? "󰤮" : ""})))
+           :text {essid == "" ? "󰤮" : ""}))
 
 ;--- Bluetooth ---
 
@@ -70,7 +69,7 @@
     (label :class {connected-devices == "" ? "widget-red" : "widget"}
            :visible bluetooth-on
            :tooltip connected-devices
-           :text {connected-devices == "" ? "" : ""})))
+           :text {connected-devices == "" ? "󰂲" : ""})))
 
 ;--- Volume ---
 
